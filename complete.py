@@ -19,7 +19,8 @@ STRIPE_WEBHOOK_SECRET = "whsec_zlO05B2igeusVhnfqUSvM7C2u3GKVvGF"
 STRIPE_PRICE_ID = "price_1R1WTfKzVLA9Quz4vzJxsURX"
 chat_id = "-1002402744201"  # Your Telegram group ID
 
-bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
+bot_app = Application.builder().token(BOT_TOKEN).build()
+bot = bot_app.bot
 # telegram_bot = Application.builder().token(BOT_TOKEN).build()
 # bot = telegram_bot.bot
 # Initialize Flask app for Stripe Webhooks
@@ -153,51 +154,74 @@ def stripe_webhook():
         subscription = event['data']['object']
         telegram_id = subscription['metadata'].get('telegram_id', None)
         print(f"Inviting member id: {telegram_id}")
-        loop.run_until_complete(invite_user_to_group(bot, int(telegram_id)))
+        # asyncio.run_coroutine_threadsafe(invite_user_to_group(bot, int(telegram_id)), bot.loop)
+        bot_app.create_task(invite_user_to_group(bot, int(telegram_id)))
+
 
 
     elif event_type == "customer.subscription.deleted" or event_type == "invoice.payment_failed":
         subscription = event['data']['object']
         telegram_id = subscription['metadata'].get('telegram_id', None)
-        loop.run_until_complete(remove_user(bot, int(telegram_id)))
+        # asyncio.run_coroutine_threadsafe(remove_user(bot, int(telegram_id)), bot.loop)
+        bot_app.create_task(remove_user(bot, int(telegram_id)))
+
 
     return "", 200
 
-# ✅ Run Flask Webhook Server
+
+
+
 def run_flask():
+    """Blocking call to run Flask in a separate thread."""
     app.run(port=5004, debug=False, use_reloader=False)
 
-def run_bot():
-    bot_app = Application.builder().token(BOT_TOKEN).build()
+# -------- ASYNC MAIN FUNCTION FOR THE BOT --------
+async def async_main():
+    """Manually initialize, start & poll the bot without blocking the loop."""
+    # 1) Initialize
+    await bot_app.initialize()
+
+    # 2) Add handlers
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(CommandHandler("subscribe", subscribe))
     bot_app.add_handler(CommandHandler("cancel", cancel))
 
-    bot_app.run_polling()
-    print("🤖 Telegram Bot is running...")
+    # 3) Start the bot
+    await bot_app.start()
 
-# ✅ Run Telegram Bot & Flask Together Without Conflict
+    # 4) Start polling for updates
+    await bot_app.updater.start_polling()
 
+    # Keep this running until we decide to stop (we'll block on an event)
+    print("🤖 Telegram Bot is running... (async_main)")
+
+    # Wait indefinitely (or until we set an asyncio.Event)
+    # e.g.:
+    stop_event = asyncio.Event()
+    await stop_event.wait()
+
+    # 5) Stop polling
+    await bot_app.updater.stop()
+
+    # 6) Stop the bot
+    await bot_app.stop()
+
+    # 7) Shutdown
+    await bot_app.shutdown()
+
+# -------- ENTRY POINT --------
 if __name__ == "__main__":
+    # We'll have one main asyncio event loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    # Run the Flask app in a separate thread
-    flask_thread = Thread(target=lambda: loop.run_until_complete(run_flask()))
+    # Start Flask in a separate thread so it doesn't block the bot
+    flask_thread = Thread(target=run_flask, daemon=True)
     flask_thread.start()
-    run_bot()
 
-# def main():
-#     loop = asyncio.new_event_loop()
-#     asyncio.set_event_loop(loop)
+    # Now run the Telegram bot (which is also async) in the *same* loop
+    loop.run_until_complete(async_main())
 
-#     bot_app = Application.builder().token(BOT_TOKEN).build()
-#     bot_app.add_handler(CommandHandler("start", start))
-#     bot_app.add_handler(CommandHandler("subscribe", subscribe))
-#     bot_app.add_handler(CommandHandler("cancel", cancel))
-
-#     print("🤖 Telegram Bot is running...")
-
-#     # Start Flask in a separate thread to avoid event loop conflicts
-#     flask_thread = Thread(target=run_flask, daemon=True)
-#     flask_thread.start()
+    # If we get here, the bot has stopped.
+    # Flask is in the background thread, also possibly still running.
+    print("Bot has shut down.")
