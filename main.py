@@ -10,6 +10,7 @@ from telegram import (Bot, ChatJoinRequest, ChatPermissions,
                       ReplyKeyboardMarkup, Update)
 from telegram.ext import (Application, CallbackContext, CommandHandler,
                           MessageHandler, filters)
+from telegram.helpers import escape_markdown
 
 # ------------------------------------------------------------------------------
 # 1) LOAD ENV & CONFIG
@@ -122,12 +123,20 @@ async def invite_user_to_group(bot: Bot, user_id: int):
     try:
         invite_link = await bot.create_chat_invite_link(
             chat_id=chat_id,
-            member_limit=1
+            member_limit=1,
+            name="Join Group"
         )
+
+
+        link_message = (
+          f"join the group: {invite_link.invite_link}"
+        )
+
         await bot.send_message(
-            user_id,
-            f"invitelink:{invite_link.invite_link} (Do not share this with anyone else!)"
+            chat_id=user_id,
+            text=link_message,
         )
+
         print(f"✅ Sent invite link to Telegram ID: {user_id}")
     except Exception as e:
         print(f"❌ Error inviting user {user_id}: {e}")
