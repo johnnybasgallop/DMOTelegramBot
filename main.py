@@ -5,7 +5,7 @@ from telegram import Bot, ChatPermissions, ReplyKeyboardMarkup, Update
 from telegram.ext import (Application, CallbackContext, CommandHandler,
                           MessageHandler, filters)
 
-chat_id = "-1002251747215"
+chat_id = "-1002402744201"
 
 # Load environment variables
 load_dotenv()
