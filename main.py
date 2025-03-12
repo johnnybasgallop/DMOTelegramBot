@@ -46,7 +46,7 @@ stripe.api_key = STRIPE_API_KEY
 # ------------------------------------------------------------------------------
 # 2) BOT SETUP & HANDLERS
 # ------------------------------------------------------------------------------
-keyboard = [["/subscribe", "/transferfromdiscord", "/cancel"]]
+keyboard = [["/subscribe", "/cancel"]]
 reply_markup = ReplyKeyboardMarkup(
     keyboard,
     resize_keyboard=True,
