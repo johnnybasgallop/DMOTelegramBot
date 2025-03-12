@@ -58,7 +58,6 @@ start_message = (
     "Welcome! 👋\n\n"
     "Here are your available commands:\n"
     "📌 /subscribe - Subscribe to our services\n"
-    "🔄 /transferfromdiscord - Input your Discord ID to gain access to Telegram channels at no extra charge\n"
     "❌ /cancel - Cancel your subscription (expires at the end of the calendar month)\n\n"
     "Please select an option below:"
 )
