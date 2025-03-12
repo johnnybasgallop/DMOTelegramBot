@@ -77,11 +77,14 @@ async def cancel(update: Update, context: CallbackContext):
         subscriptions = stripe.Subscription.list(limit=200)
         for subscription in subscriptions.auto_paging_iter():
             if subscription.metadata.get('telegram_id') == str(user_id):
-                stripe.Subscription.delete(subscription.id)
-                await update.message.reply_text(
-                    "Your subscription has been canceled, and you have been removed from the group."
+               stripe.Subscription.modify(
+                    subscription.id,
+                    cancel_at_period_end=True
                 )
-                return
+               await update.message.reply_text(
+                    "Your subscription will remain active until the end of your current billing period, and will then be canceled automatically."
+                )
+            return
         # If no active subscription found:
         await update.message.reply_text(
             "No active subscription found. If you still need help, contact an admin."
