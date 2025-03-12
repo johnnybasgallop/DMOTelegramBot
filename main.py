@@ -248,7 +248,6 @@ def stripe_webhook():
 
 def run_flask():
     """Runs Flask in a blocking call (but on a separate thread)."""
-    def run_flask():
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
