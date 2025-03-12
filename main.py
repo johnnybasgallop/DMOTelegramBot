@@ -205,9 +205,19 @@ def stripe_webhook():
         sub_type = "Subscription"
         active_status = "Active"
 
+        cell = sheet.find(telegram_id_str, in_column=3)  # column C = 3
+        if cell:
+            row = cell.row
+            # Column G = 7
+            sheet.update_cell(row, 6, active_status)
+            print(f"Updated row {row} column 6 to '{active_status}'")
+        else:
+            row_data = [f"{name} ({email})", phone, telegram_id_str, date_started, sub_type, active_status]
+            add_data_to_sheet(sheet, row_data)
+
+
         # columns: [Name, Phone, TelegramID, DateStarted, NextBilling, SubType, ActiveStatus]
-        row_data = [f"{name} ({email})", phone, telegram_id_str, date_started, sub_type, active_status]
-        add_data_to_sheet(sheet, row_data)
+
 
     def update_subscription_in_sheet(new_status):
         """Updates the G column to the new_status for the given telegram_id."""
