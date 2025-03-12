@@ -25,9 +25,9 @@ from google_sheets import add_data_to_sheet, init_sheet, update_data_in_sheet
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
-STRIPE_WEBHOOK_SECRET = "whsec_zlO05B2igeusVhnfqUSvM7C2u3GKVvGF"
-STRIPE_PRICE_ID = "price_1R1WTfKzVLA9Quz4vzJxsURX"
-chat_id = "-1002402744201"  # Your Telegram group ID
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_KEY")
+STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID")
+chat_id = os.getenv("CHANNEL_ID")
 
 # Initialize the Google Sheet
 sheet = init_sheet()
