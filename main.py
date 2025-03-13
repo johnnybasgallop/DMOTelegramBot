@@ -127,6 +127,7 @@ async def send_stripe_link(bot: Bot, user_id: int):
             mode='subscription',
             success_url='https://your-success-url.com',
             cancel_url='https://your-cancel-url.com',
+            discounts=[{'coupon': 'pW0w5fpv'}],
             client_reference_id=str(user_id),
             subscription_data={'metadata': {'telegram_id': str(user_id)}}
         )
