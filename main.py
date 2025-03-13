@@ -125,7 +125,7 @@ async def send_stripe_link(bot: Bot, user_id: int):
             payment_method_types=['card'],
             line_items=[{'price': STRIPE_PRICE_ID, 'quantity': 1}],
             mode='subscription',
-            success_url='https://your-success-url.com',
+            success_url='https://67d2acde0fd57931d93462b2--telestripe.netlify.app/success',
             cancel_url='https://your-cancel-url.com',
             discounts=[{'coupon': 'pW0w5fpv'}],
             client_reference_id=str(user_id),
