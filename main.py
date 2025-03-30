@@ -127,7 +127,6 @@ async def send_stripe_link(bot: Bot, user_id: int):
             mode='subscription',
             success_url='https://67d2acde0fd57931d93462b2--telestripe.netlify.app/success',
             cancel_url='https://your-cancel-url.com',
-            discounts=[{'coupon': 'pW0w5fpv'}],
             client_reference_id=str(user_id),
             subscription_data={'metadata': {'telegram_id': str(user_id)}}
         )
