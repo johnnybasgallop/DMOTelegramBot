@@ -12,7 +12,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 # Adjust these for your project:
 TOKEN_PATH = "token_telegram.pickle"
 CREDENTIALS_PATH = "client_secret_telegram.json"
-SHEET_NAME = "ReformFXSubSheetTelegram"  # The name of your Google Sheet workbook
+SHEET_NAME = "DMOSubSheetTelegram"  # The name of your Google Sheet workbook
 SHEET_TAB = "Master"                    # The sheet/tab name (if you have multiple)
 
 SCOPES = [
