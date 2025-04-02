@@ -186,8 +186,6 @@ def stripe_webhook():
     telegram_id_str = subscription_obj.get("metadata", {}).get("telegram_id")
     price_id_object = subscription_obj.get("plan", {}).get("id")
 
-    print(f"price_id = {price_id_object}")
-
 
     if telegram_id_str:
         print(f"[FLASK] Telegram ID from metadata: {telegram_id_str}")
@@ -230,8 +228,9 @@ def stripe_webhook():
     if event_type == "customer.subscription.created":
         # Create row in GSheets, invite user
         def handle_created():
-            record_subscription_in_sheet(subscription_obj)
-            bot_app.create_task(invite_user_to_group(bot, int(telegram_id_str)))
+            if price_id_object == STRIPE_PRICE_ID:
+                record_subscription_in_sheet(subscription_obj)
+                bot_app.create_task(invite_user_to_group(bot, int(telegram_id_str)))
 
         MAIN_LOOP.call_soon_threadsafe(handle_created)
 
