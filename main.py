@@ -184,6 +184,10 @@ def stripe_webhook():
     event_type = event.get("type")
     subscription_obj = event.get("data", {}).get("object", {})
     telegram_id_str = subscription_obj.get("metadata", {}).get("telegram_id")
+    price_id_object = subscription_obj.get("plan", {}).get("id")
+
+    print(f"price_id = {price_id_object}")
+
 
     if telegram_id_str:
         print(f"[FLASK] Telegram ID from metadata: {telegram_id_str}")
@@ -231,7 +235,7 @@ def stripe_webhook():
 
         MAIN_LOOP.call_soon_threadsafe(handle_created)
 
-    elif event_type == "customer.subscription.deleted":
+    if event_type == "customer.subscription.deleted":
         # Mark them "Cancelled", remove from group
         def handle_deleted():
             update_subscription_in_sheet("Cancelled")
@@ -246,6 +250,7 @@ def stripe_webhook():
             bot_app.create_task(remove_user(bot, int(telegram_id_str)))
 
         MAIN_LOOP.call_soon_threadsafe(handle_failed)
+
 
     # If desired, handle invoice.payment_succeeded:
     #   def handle_succeeded():
