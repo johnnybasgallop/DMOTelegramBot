@@ -225,14 +225,6 @@ def stripe_webhook():
         update_data_in_sheet(sheet, telegram_id_str, new_status)
 
     # React to the event
-    if event_type == "customer.subscription.created":
-        # Create row in GSheets, invite user
-        def handle_created():
-            if price_id_object == STRIPE_PRICE_ID:
-                record_subscription_in_sheet(subscription_obj)
-                bot_app.create_task(invite_user_to_group(bot, int(telegram_id_str)))
-
-        MAIN_LOOP.call_soon_threadsafe(handle_created)
 
     if event_type == "customer.subscription.deleted":
         # Mark them "Cancelled", remove from group
@@ -249,6 +241,21 @@ def stripe_webhook():
             bot_app.create_task(remove_user(bot, int(telegram_id_str)))
 
         MAIN_LOOP.call_soon_threadsafe(handle_failed)
+
+    elif event_type == "invoice.payment_succeeded":
+        invoice_obj = event.get("data", {}).get("object", {})
+        billing_reason = invoice_obj.get("billing_reason")
+        # Retrieve the subscription to get metadata
+        subscription_id = invoice_obj.get("subscription")
+        subscription_obj = stripe.Subscription.retrieve(subscription_id)
+        telegram_id_str = subscription_obj.get("metadata", {}).get("telegram_id")
+
+        # Only perform onboarding actions for the initial payment
+        if billing_reason == "subscription_create":
+            def handle_initial_payment():
+                record_subscription_in_sheet(subscription_obj)
+                bot_app.create_task(invite_user_to_group(bot, int(telegram_id_str)))
+            MAIN_LOOP.call_soon_threadsafe(handle_initial_payment)
 
 
     # If desired, handle invoice.payment_succeeded:
