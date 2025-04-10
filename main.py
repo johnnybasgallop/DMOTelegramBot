@@ -8,11 +8,12 @@ from threading import Thread
 import stripe
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-from telegram import (Bot, ChatJoinRequest, ChatPermissions,
+from telegram import (Bot, ChatJoinRequest, ChatPermissions, KeyboardButton,
                       ReplyKeyboardMarkup, Update)
 from telegram.ext import (Application, CallbackContext, CommandHandler,
                           MessageHandler, filters)
 
+from checks import check_if_in_usa
 # Import Google Sheets helpers
 from google_sheets import add_data_to_sheet, init_sheet, update_data_in_sheet
 
@@ -23,11 +24,12 @@ from google_sheets import add_data_to_sheet, init_sheet, update_data_in_sheet
 # 1) LOAD ENV & CONFIG
 # ------------------------------------------------------------------------------
 load_dotenv()
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
-STRIPE_WEBHOOK_SECRET = "whsec_zlO05B2igeusVhnfqUSvM7C2u3GKVvGF"
-STRIPE_PRICE_ID = "price_1R1WTfKzVLA9Quz4vzJxsURX"
-chat_id = "-1002402744201"  # Your Telegram group ID
+BOT_TOKEN = "7228976753:AAHldynEq_drME-p1yzRKbMN5tmx5eWKkO8"
+STRIPE_API_KEY = "sk_test_51NwscYDt39UfBCOTXfljDvB4ShUYfi5oXtCt2yqSFLQlXcORiJPFyxEWLBauMUaRjtTEHisN8SDoCbAjffXmcFso00mQs62sN8"
+STRIPE_WEBHOOK_SECRET = "whsec_YcJH4sQTgcuEtD6jg6rXU4o7Z9l3ZzKW"
+STRIPE_PRICE_ID_MONTHLY = "price_1RCKMeDt39UfBCOTqilGV7uK"
+STRIPE_PRICE_ID_YEARLY = "price_1RCKNJDt39UfBCOTtIPKqjfx"
+chat_id = "-1002251747215"  # Your Telegram group ID
 
 # Initialize the Google Sheet
 sheet = init_sheet()
@@ -63,13 +65,37 @@ start_message = (
     "Please select an option below:"
 )
 
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text(start_message, reply_markup=reply_markup)
+location_button = KeyboardButton("Send Location", request_location=True)
+keyboard = [[location_button]]
+reply_location_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
-async def subscribe(update: Update, context: CallbackContext):
+async def location_handler(update: Update, context: CallbackContext):
+    # Get the shared location details
+    user_location = update.message.location
+    latitude = user_location.latitude
+    longitude = user_location.longitude
+
     user_id = update.message.from_user.id
     print(f"User ID: {user_id} requested subscription")
-    await send_stripe_link(bot, user_id)
+    monthly = check_if_in_usa(latitude=latitude, longitude=longitude)
+    await send_stripe_link(bot, user_id, monthly)
+
+
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text(start_message, reply_markup=reply_markup)
+    #  await update.message.reply_text(
+    #     "Please share your location to determine the best subscription plan:",
+    #     reply_markup=reply_markup
+    # )
+
+async def subscribe(update: Update, context: CallbackContext):
+    # user_id = update.message.from_user.id
+    # print(f"User ID: {user_id} requested subscription")
+    # await send_stripe_link(bot, user_id, False)
+      await update.message.reply_text(
+        "Please share your location to determine the best subscription plan:",
+        reply_markup=reply_location_markup
+    )
 
 async def approve_join_request(update: ChatJoinRequest, context: CallbackContext):
     """Automatically approves join requests, if you want to use it."""
@@ -119,12 +145,14 @@ async def cancel(update: Update, context: CallbackContext):
 # ------------------------------------------------------------------------------
 # 3) ASYNC BOT FUNCTIONS
 # ------------------------------------------------------------------------------
-async def send_stripe_link(bot: Bot, user_id: int):
+async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
     """Sends user a Stripe checkout link."""
+    price_id = STRIPE_PRICE_ID_MONTHLY if monthly else STRIPE_PRICE_ID_YEARLY
+
     try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
-            line_items=[{'price': STRIPE_PRICE_ID, 'quantity': 1}],
+            line_items=[{'price': price_id, 'quantity': 1}],
             mode='subscription',
             success_url='https://your-success-url.com',
             cancel_url='https://your-cancel-url.com',
@@ -264,6 +292,7 @@ async def async_main():
     # 2) Handlers
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(CommandHandler("subscribe", subscribe))
+    bot_app.add_handler(MessageHandler(filters.LOCATION, location_handler))
     bot_app.add_handler(CommandHandler("cancel", cancel))
     # Example for auto-approve join requests:
     # from telegram.ext import ChatJoinRequestHandler

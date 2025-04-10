@@ -6,7 +6,7 @@ from telegram.ext import Application, CallbackContext, MessageHandler, filters
 
 # Load environment variables
 load_dotenv()
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = "7228976753:AAHldynEq_drME-p1yzRKbMN5tmx5eWKkO8"
 
 async def get_chat_id(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
