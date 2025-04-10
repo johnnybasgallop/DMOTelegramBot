@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from threading import Thread
 
+import pyshorteners
 import stripe
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -33,6 +34,7 @@ chat_id = "-1002251747215"  # Your Telegram group ID
 
 # Initialize the Google Sheet
 sheet = init_sheet()
+shortener_object = pyshorteners.Shortener()
 
 # Create the PTB Application
 bot_app = Application.builder().token(BOT_TOKEN).build()
@@ -65,7 +67,7 @@ start_message = (
     "Please select an option below:"
 )
 
-location_button = KeyboardButton("Send Location", request_location=True)
+location_button = KeyboardButton("📍 Share Your Location", request_location=True)
 keyboard = [[location_button]]
 reply_location_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
@@ -159,9 +161,11 @@ async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
             client_reference_id=str(user_id),
             subscription_data={'metadata': {'telegram_id': str(user_id)}}
         )
+
+        short_link = shortener_object.tinyurl.short(checkout_session.url)
         await bot.send_message(
             user_id,
-            f"Click here to subscribe: {checkout_session.url}"
+            f"Yes bro cmonn, Click here to subscribe 👊🏿 : {short_link}"
         )
         print(f"✅ Sent Stripe subscription link to Telegram ID: {user_id}")
     except Exception as e:
