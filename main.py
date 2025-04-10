@@ -5,19 +5,19 @@ import os
 from datetime import datetime
 from threading import Thread
 
+# from telegram.helpers import escape_markdown  # if you need it
+import pyshorteners
 import stripe
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-from telegram import (Bot, ChatJoinRequest, ChatPermissions,
+from telegram import (Bot, ChatJoinRequest, ChatPermissions, KeyboardButton,
                       ReplyKeyboardMarkup, Update)
 from telegram.ext import (Application, CallbackContext, CommandHandler,
                           MessageHandler, filters)
 
+from checks import check_if_in_usa
 # Import Google Sheets helpers
 from google_sheets import add_data_to_sheet, init_sheet, update_data_in_sheet
-
-# from telegram.helpers import escape_markdown  # if you need it
-
 
 # ------------------------------------------------------------------------------
 # 1) LOAD ENV & CONFIG
@@ -26,7 +26,10 @@ load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_KEY")
-STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID")
+STRIPE_PRICE_ID_MONTHLY = os.getenv("STRIPE_PRICE_ID_MONTHLY")
+STRIPE_PRICE_ID_YEARLY = os.getenv("STRIPE_PRICE_ID_YEARLY")
+
+
 chat_id = os.getenv("CHANNEL_ID")
 
 # Initialize the Google Sheet
@@ -62,13 +65,38 @@ start_message = (
     "Please select an option below:"
 )
 
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text(start_message, reply_markup=reply_markup)
+location_button = KeyboardButton("📍 Share Your Location", request_location=True)
+keyboard = [[location_button]]
+reply_location_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
-async def subscribe(update: Update, context: CallbackContext):
+async def location_handler(update: Update, context: CallbackContext):
+    # Get the shared location details
+    user_location = update.message.location
+    latitude = user_location.latitude
+    longitude = user_location.longitude
+
     user_id = update.message.from_user.id
     print(f"User ID: {user_id} requested subscription")
-    await send_stripe_link(bot, user_id)
+    monthly = check_if_in_usa(latitude=latitude, longitude=longitude)
+    await send_stripe_link(bot, user_id, monthly)
+
+
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text(start_message, reply_markup=reply_markup)
+    #  await update.message.reply_text(
+    #     "Please share your location to determine the best subscription plan:",
+    #     reply_markup=reply_markup
+    # )
+
+async def subscribe(update: Update, context: CallbackContext):
+    # user_id = update.message.from_user.id
+    # print(f"User ID: {user_id} requested subscription")
+    # await send_stripe_link(bot, user_id, False)
+      await update.message.reply_text(
+        "Please share your location to determine the best subscription plan, ensure you're on a mobile device first 😃:",
+        reply_markup=reply_location_markup
+    )
+
 
 async def approve_join_request(update: ChatJoinRequest, context: CallbackContext):
     """Automatically approves join requests, if you want to use it."""
@@ -118,12 +146,13 @@ async def cancel(update: Update, context: CallbackContext):
 # ------------------------------------------------------------------------------
 # 3) ASYNC BOT FUNCTIONS
 # ------------------------------------------------------------------------------
-async def send_stripe_link(bot: Bot, user_id: int):
+async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
     """Sends user a Stripe checkout link."""
+    price_id = STRIPE_PRICE_ID_MONTHLY if monthly  else STRIPE_PRICE_ID_YEARLY
     try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
-            line_items=[{'price': STRIPE_PRICE_ID, 'quantity': 1}],
+            line_items=[{'price': price_id, 'quantity': 1}],
             mode='subscription',
             success_url='https://67d2acde0fd57931d93462b2--telestripe.netlify.app/success',
             cancel_url='https://your-cancel-url.com',
