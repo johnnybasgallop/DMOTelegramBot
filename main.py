@@ -70,6 +70,7 @@ keyboard = [[location_button]]
 reply_location_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
 async def location_handler(update: Update, context: CallbackContext):
+    print("Calling location handler")
     # Get the shared location details
     user_location = update.message.location
     latitude = user_location.latitude
@@ -314,6 +315,7 @@ async def async_main():
     # 2) Handlers
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(CommandHandler("subscribe", subscribe))
+    bot_app.add_handler(MessageHandler(filters.LOCATION, location_handler))
     bot_app.add_handler(CommandHandler("cancel", cancel))
     # Example for auto-approve join requests:
     # from telegram.ext import ChatJoinRequestHandler
