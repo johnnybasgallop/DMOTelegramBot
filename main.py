@@ -50,7 +50,7 @@ stripe.api_key = STRIPE_API_KEY
 # ------------------------------------------------------------------------------
 # 2) BOT SETUP & HANDLERS
 # ------------------------------------------------------------------------------
-keyboard = [["/subscribe", "/transferfromdiscord", "/cancel"]]
+keyboard = [["/subscribe", "/cancel"]]
 reply_markup = ReplyKeyboardMarkup(
     keyboard,
     resize_keyboard=True,
@@ -62,7 +62,6 @@ start_message = (
     "Welcome! 👋\n\n"
     "Here are your available commands:\n"
     "📌 /subscribe - Subscribe to our services\n"
-    "🔄 /transferfromdiscord - Input your Discord ID to gain access to Telegram channels at no extra charge\n"
     "❌ /cancel - Cancel your subscription (expires at the end of the calendar month)\n\n"
     "Please select an option below:"
 )
@@ -95,7 +94,7 @@ async def subscribe(update: Update, context: CallbackContext):
     # print(f"User ID: {user_id} requested subscription")
     # await send_stripe_link(bot, user_id, False)
       await update.message.reply_text(
-        "Please share your location to determine the best subscription plan:",
+        "Please share your location to determine the best subscription plan, ensure you're on a mobile device first 😃:",
         reply_markup=reply_location_markup
     )
 
