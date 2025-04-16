@@ -181,7 +181,7 @@ async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
 
 async def invite_user_to_group(bot: Bot, user_id: int):
     """Creates a single-use invite link and sends it to the user."""
-    expiry_timestamp = int(time.time()) + 172800
+    expiry_timestamp = int(time.time()) + 45
     try:
         invite_link = await bot.create_chat_invite_link(
             chat_id=chat_id,
