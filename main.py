@@ -132,7 +132,7 @@ async def cancel(update: Update, context: CallbackContext):
 
                 await update.message.reply_text(
                     "Your subscription will remain active until the end "
-                    "of your current billing period, then be canceled automatically."
+                    "of your current billing period, then be canceled automatically. If you are still in your trial period then you will not be charged."
                 )
                 return
         # If no subscription found
@@ -160,7 +160,10 @@ async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
             success_url='https://67d2acde0fd57931d93462b2--telestripe.netlify.app/success',
             cancel_url='https://your-cancel-url.com',
             client_reference_id=str(user_id),
-            subscription_data={'metadata': {'telegram_id': str(user_id)}}
+                subscription_data={
+                'metadata': {'telegram_id': str(user_id)},
+                'trial_period_days': 7  # This sets a 7-day free trial
+            }
         )
 
         short_link = shortener_object.tinyurl.short(checkout_session.url)
