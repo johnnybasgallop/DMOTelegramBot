@@ -44,7 +44,7 @@ bot = bot_app.bot
 # GLOBAL to store the main event loop used by the bot
 MAIN_LOOP = None
 
-shortener_object = pyshorteners.Shortener()
+shortener_object = pyshorteners.Shortener('isgd')
 # Initialize Flask
 app = Flask(__name__)
 stripe.api_key = STRIPE_API_KEY
@@ -168,8 +168,13 @@ async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
                 'trial_period_days': 7  # This sets a 7-day free trial
             }
         )
+        try:
+            short_link = shortener_object.isgd.short(checkout_session.url)
 
-        short_link = shortener_object.tinyurl.short(checkout_session.url)
+        except Exception as e:
+            print("error shortening link: {e}")
+            short_link = checkout_session.url
+
 
         await bot.send_message(
             user_id,
