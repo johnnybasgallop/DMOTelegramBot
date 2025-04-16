@@ -150,19 +150,6 @@ async def cancel(update: Update, context: CallbackContext):
 # 3) ASYNC BOT FUNCTIONS
 # ------------------------------------------------------------------------------
 
-async def new_member_handler(update: Update, context: CallbackContext):
-    # Check if new_chat_members is populated and the update has an invite link
-    if update.message.new_chat_members and update.message.invite_link:
-        used_invite = update.message.invite_link.invite_link
-        print(f"Invite link used: {used_invite}")
-        # Revoke the invite link immediately after its use
-        try:
-            await context.bot.revoke_chat_invite_link(chat_id, used_invite)
-            print(f"✅ Revoked invite link: {used_invite}")
-        except Exception as e:
-            print(f"❌ Error revoking invite link: {e}")
-
-
 
 async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
     """Sends user a Stripe checkout link."""
@@ -339,7 +326,6 @@ async def async_main():
     bot_app.add_handler(CommandHandler("start", start))
     bot_app.add_handler(CommandHandler("subscribe", subscribe))
     bot_app.add_handler(MessageHandler(filters.LOCATION, location_handler))
-    bot_app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_member_handler))
     bot_app.add_handler(CommandHandler("cancel", cancel))
     # Example for auto-approve join requests:
     # from telegram.ext import ChatJoinRequestHandler
