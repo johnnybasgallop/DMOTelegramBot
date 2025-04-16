@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+import time
 from datetime import datetime
 from threading import Thread
 
@@ -180,11 +181,13 @@ async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
 
 async def invite_user_to_group(bot: Bot, user_id: int):
     """Creates a single-use invite link and sends it to the user."""
+    expiry_timestamp = int(time.time()) + 172800
     try:
         invite_link = await bot.create_chat_invite_link(
             chat_id=chat_id,
             member_limit=1,
-            name="Join Group"
+            name="Join Group",
+            expiry_date=expiry_timestamp
         )
         link_message = f"click here to join the group: {invite_link.invite_link} 🚀"
         await bot.send_message(chat_id=user_id, text=link_message)
