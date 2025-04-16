@@ -44,7 +44,7 @@ bot = bot_app.bot
 # GLOBAL to store the main event loop used by the bot
 MAIN_LOOP = None
 
-shortener_object = pyshorteners.Shortener('isgd')
+shortener_object = pyshorteners.Shortener()
 # Initialize Flask
 app = Flask(__name__)
 stripe.api_key = STRIPE_API_KEY
