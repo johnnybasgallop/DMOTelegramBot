@@ -184,7 +184,7 @@ async def invite_user_to_group(bot: Bot, user_id: int):
             member_limit=1,
             name="Join Group"
         )
-        link_message = f"Join the group: {invite_link.invite_link}"
+        link_message = f"click here to join the group: {invite_link.invite_link} 🚀"
         await bot.send_message(chat_id=user_id, text=link_message)
         print(f"✅ Sent invite link to Telegram ID: {user_id}")
     except Exception as e:
