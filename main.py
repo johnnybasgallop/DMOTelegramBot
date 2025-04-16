@@ -187,7 +187,7 @@ async def invite_user_to_group(bot: Bot, user_id: int):
             chat_id=chat_id,
             member_limit=1,
             name="Join Group",
-            expiry_date=expiry_timestamp
+            expire_date=expiry_timestamp
         )
         link_message = f"click here to join the group: {invite_link.invite_link} 🚀"
         await bot.send_message(chat_id=user_id, text=link_message)
