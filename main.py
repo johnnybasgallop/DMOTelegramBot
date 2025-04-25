@@ -165,7 +165,7 @@ async def send_stripe_link(bot: Bot, user_id: int, monthly: bool):
             client_reference_id=str(user_id),
                 subscription_data={
                 'metadata': {'telegram_id': str(user_id)},
-                'trial_period_days': 7  # This sets a 7-day free trial
+                'trial_period_days': 3  # This sets a 7-day free trial
             }
         )
         try:
